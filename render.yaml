@@ -2,5 +2,5 @@ services:
   - type: web
     name: hunar-hub
     env: node
-    buildCommand: cd hunar-hub && npm install
+    buildCommand: cd hunar-hub && npm install && npm rebuild sqlite3 --build-from-source
     startCommand: cd hunar-hub && node server.js
