@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "builds": [
+    { "use": "@vercel/node", "src": "hunar-hub/server.js" }
+  ],
+  "routes": [
+    { "src": "(.*)", "dest": "hunar-hub/server.js" }
+  ]
+}
