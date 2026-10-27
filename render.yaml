@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: hunar-hub
+    env: node
+    buildCommand: cd hunar-hub && npm install
+    startCommand: cd hunar-hub && node server.js
