@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Login — Hunar Hub</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <navbar>
+        <a href="/" class="logo">Hunar Hub</a>
+        <ul class="nav-links">
+            <li><a href="/">Home</a></li>
+            <li><a href="/register.html">Register</a></li>
+        </ul>
+    </navbar>
+
+    <div class="container">
+        <div class="form-card">
+            <h2 style="margin-bottom: 1.5rem; text-align: center;">Welcome Back</h2>
+            <div id="errorMsg" style="color: red; margin-bottom: 1rem; text-align: center; display: none;"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="email" required placeholder="e.g. customer@hunarhub.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" required placeholder="********">
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">Login</button>
+            </form>
+
+            <div
+                style="margin-top: 1.5rem; background: #f1f5f9; padding: 0.75rem; border-radius: 6px; font-size: 0.85rem;">
+                <strong>Demo Credentials:</strong><br>
+                - Customer: customer@hunarhub.com / password123<br>
+                - Worker: worker@hunarhub.com / password123
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('errorMsg');
+
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                if (data.user.role === 'worker') {
+                    window.location.href = '/worker-dashboard.html';
+                } else {
+                    window.location.href = '/customer-dashboard.html';
+                }
+            } else {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = data.error || 'Login failed';
+            }
+        });
+    </script>
+</body>
+
+</html>

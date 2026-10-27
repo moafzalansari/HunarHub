@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Worker Profile — Hunar Hub</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <navbar>
+        <a href="/" class="logo">Hunar Hub</a>
+        <ul class="nav-links">
+            <li><a href="/">Browse Services</a></li>
+            <li><a href="/customer-dashboard.html">My Dashboard</a></li>
+        </ul>
+    </navbar>
+
+    <div class="container" style="max-width: 800px;">
+        <div id="profileContainer" class="form-card" style="max-width: 100%; margin-top: 1rem;">
+            <p>Loading worker details...</p>
+        </div>
+
+        <div class="form-card" style="max-width: 100%; margin-top: 2rem;">
+            <h3>Book Service Request</h3>
+            <div id="bookingMsg" style="margin-bottom: 1rem; color: green; display: none;"></div>
+            <form id="bookingForm" style="margin-top: 1rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Service Date</label>
+                        <input type="date" id="service_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Service Time</label>
+                        <input type="time" id="service_time" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Service Address / Locality</label>
+                    <input type="text" id="address" required placeholder="Flat No, Building, Street, Locality">
+                </div>
+                <div class="form-group">
+                    <label>Describe the Problem / Work</label>
+                    <textarea id="work_description" rows="3" required
+                        placeholder="E.g., Kitchen tap is leaking heavily since morning..."></textarea>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">Submit Booking Request</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const workerId = urlParams.get('id');
+
+        async function loadWorkerProfile() {
+            const res = await fetch(`/api/workers/${workerId}`);
+            if (!res.ok) {
+                document.getElementById('profileContainer').innerHTML = `<p>Worker not found.</p>`;
+                return;
+            }
+            const w = await res.json();
+            document.getElementById('profileContainer').innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+          <div>
+            <h2 style="margin-bottom: 0.25rem;">${w.worker_name}</h2>
+            <p style="color: #0d9488; font-weight: 600; margin-bottom: 1rem;">${w.category_name}</p>
+          </div>
+          <span style="background: #ccfbf1; color: #0f766e; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: bold;">₹${w.price} / ${w.pricing_unit}</span>
+        </div>
+        <p style="margin-bottom: 0.75rem;"><strong>Experience:</strong> ${w.experience} Years</p>
+        <p style="margin-bottom: 0.75rem;"><strong>Skills:</strong> ${w.skills}</p>
+        <p style="margin-bottom: 0.75rem;"><strong>Service Area:</strong> ${w.locality}, ${w.service_area}</p>
+        <p style="margin-bottom: 0.75rem;"><strong>About:</strong> ${w.description}</p>
+        <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid #e2e8f0;">
+        <h3>Customer Reviews (${w.review_count || 0})</h3>
+        <div style="margin-top: 1rem;">
+          ${w.reviews.length === 0 ? '<p style="color: #64748b;">No reviews yet.</p>' : w.reviews.map(r => `
+            <div style="background: #f8fafc; padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; border: 1px solid #e2e8f0;">
+              <strong>⭐ ${r.rating}/5</strong> - ${r.comment}
+            </div>
+          `).join('')}
+        </div>
+      `;
+        }
+
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = {
+                worker_id: workerId,
+                service_date: document.getElementById('service_date').value,
+                service_time: document.getElementById('service_time').value,
+                address: document.getElementById('address').value,
+                work_description: document.getElementById('work_description').value
+            };
+
+            const res = await fetch('/api/bookings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            const msg = document.getElementById('bookingMsg');
+            msg.style.display = 'block';
+            if (res.ok) {
+                msg.style.color = 'green';
+                msg.textContent = data.message + ' Redirecting to dashboard...';
+                setTimeout(() => window.location.href = '/customer-dashboard.html', 1500);
+            } else {
+                msg.style.color = 'red';
+                msg.textContent = data.error || 'Failed to book.';
+            }
+        });
+
+        loadWorkerProfile();
+    </script>
+</body>
+
+</html>

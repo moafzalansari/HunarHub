@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Worker Dashboard — Hunar Hub</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <navbar>
+        <a href="/" class="logo">Hunar Hub (Provider)</a>
+        <ul class="nav-links">
+            <li><a href="/worker-profile.html" onclick="openProfileEdit(event)">Edit Profile</a></li>
+            <li><a href="#" onclick="logout()">Logout</a></li>
+        </ul>
+    </navbar>
+
+    <div class="container">
+        <h2>Incoming & Active Bookings</h2>
+        <div id="workerBookings" style="margin-top: 1.5rem;">
+            <p>Loading bookings...</p>
+        </div>
+    </div>
+
+    <script>
+        async function loadWorkerBookings() {
+            const res = await fetch('/api/bookings/worker');
+            if (res.status === 401) {
+                window.location.href = '/login.html';
+                return;
+            }
+            const bookings = await res.json();
+            const container = document.getElementById('workerBookings');
+
+            if (bookings.length === 0) {
+                container.innerHTML = `<p style="color: #64748b;">No booking requests received yet.</p>`;
+                return;
+            }
+
+            container.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          ${bookings.map(b => `
+            <div style="background: white; border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <h3>Customer: ${b.customer_name} (${b.customer_email})</h3>
+                <p style="color: #64748b; font-size: 0.9rem; margin-top: 0.25rem;">📅 ${b.service_date} at ${b.service_time} | 📍 ${b.address}</p>
+                <p style="color: #334155; font-size: 0.9rem; margin-top: 0.5rem;"><strong>Work:</strong> ${b.work_description}</p>
+                <p style="margin-top: 0.5rem; font-weight: 600;">Status: <span style="color: #0d9488;">${b.status}</span></p>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                ${b.status === 'Pending' ? `
+                  <button class="btn" style="background: #10b981; padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="updateStatus(${b.id}, 'Accepted')">Accept</button>
+                  <button class="btn" style="background: #ef4444; padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="updateStatus(${b.id}, 'Rejected')">Reject</button>
+                ` : ''}
+                ${b.status === 'Accepted' ? `
+                  <button class="btn" style="background: #3b82f6; padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="updateStatus(${b.id}, 'In Progress')">Mark In Progress</button>
+                ` : ''}
+                ${b.status === 'In Progress' ? `
+                  <button class="btn" style="background: #10b981; padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="updateStatus(${b.id}, 'Completed')">Mark Completed</button>
+                ` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+        }
+
+        async function updateStatus(id, status) {
+            const res = await fetch(`/api/bookings/${id}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+            if (res.ok) loadWorkerBookings();
+        }
+
+        function openProfileEdit(e) {
+            e.preventDefault();
+            window.location.href = '/worker-profile-edit.html';
+        }
+
+        async function logout() {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login.html';
+        }
+
+        loadWorkerBookings();
+    </script>
+</body>
+
+</html>

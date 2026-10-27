@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Profile — Hunar Hub</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <navbar>
+        <a href="/" class="logo">Hunar Hub (Provider)</a>
+        <ul class="nav-links">
+            <li><a href="/worker-dashboard.html">Dashboard</a></li>
+        </ul>
+    </navbar>
+
+    <div class="container">
+        <div class="form-card" style="max-width: 600px;">
+            <h2>Edit Service Provider Profile</h2>
+            <form id="profileForm" style="margin-top: 1.5rem;">
+                <div class="form-group">
+                    <label>Category ID (1: Plumbing, 2: Electrical, 3: AC, etc.)</label>
+                    <input type="number" id="category_id" required>
+                </div>
+                <div class="form-group">
+                    <label>Skills (Comma separated)</label>
+                    <input type="text" id="skills" required placeholder="Pipe fitting, Tap repair">
+                </div>
+                <div class="form-group">
+                    <label>Experience (Years)</label>
+                    <input type="number" id="experience" required>
+                </div>
+                <div class="form-group">
+                    <label>Locality / Area</label>
+                    <input type="text" id="locality" required placeholder="Andheri West">
+                </div>
+                <div class="form-group">
+                    <label>Service Area (City / Region)</label>
+                    <input type="text" id="service_area" required placeholder="Mumbai West">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Price (₹)</label>
+                        <input type="number" id="price" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Pricing Unit</label>
+                        <input type="text" id="pricing_unit" required placeholder="Fixed / Hour">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description / Bio</label>
+                    <textarea id="description" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">Save Profile</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        async function loadProfile() {
+            const res = await fetch('/api/worker/profile');
+            if (res.ok) {
+                const p = await res.json();
+                document.getElementById('category_id').value = p.category_id;
+                document.getElementById('skills').value = p.skills;
+                document.getElementById('experience').value = p.experience;
+                document.getElementById('locality').value = p.locality;
+                document.getElementById('service_area').value = p.service_area;
+                document.getElementById('price').value = p.price;
+                document.getElementById('pricing_unit').value = p.pricing_unit;
+                document.getElementById('description').value = p.description;
+            }
+        }
+
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = {
+                category_id: parseInt(document.getElementById('category_id').value),
+                skills: document.getElementById('skills').value,
+                experience: parseInt(document.getElementById('experience').value),
+                description: document.getElementById('description').value,
+                locality: document.getElementById('locality').value,
+                service_area: document.getElementById('service_area').value,
+                price: parseFloat(document.getElementById('price').value),
+                pricing_unit: document.getElementById('pricing_unit').value,
+                availability: 'Available'
+            };
+
+            const res = await fetch('/api/worker/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (res.ok) {
+                alert('Profile updated successfully!');
+                window.location.href = '/worker-dashboard.html';
+            } else {
+                alert('Failed to update profile.');
+            }
+        });
+
+        loadProfile();
+    </script>
+</body>
+
+</html>
